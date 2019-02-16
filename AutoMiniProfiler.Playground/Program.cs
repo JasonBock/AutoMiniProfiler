@@ -10,37 +10,37 @@ namespace AutoMiniProfiler.Playground
 {
 	class Program
 	{
-		static async Task Main() => await Program.DoManualTimings();
+		//static async Task Main() => await Program.DoManualTimings();
 
-//		static void Main(string[] args)
-//		{
-//			var code =
-//@"using System;
+		static void Main(string[] args)
+		{
+			var code =
+@"using System;
 
-//class C 
-//{ 
-//  void Bar() => Console.Out.WriteLine(""bar"");
+class C 
+{ 
+  void Bar() => Console.Out.WriteLine(""bar"");
 
-//  int Foo()
-//  {
-//    var x = 42;
-//    var y = 22;
-//    return x + y;
-//  }
-//}";
-//			Console.Out.WriteLine("Before...");
-//			Console.Out.WriteLine(code);
-//			Console.Out.WriteLine();
+  int Foo()
+  {
+    var x = 42;
+    var y = 22;
+    return x + y;
+  }
+}";
+			Console.Out.WriteLine("Before...");
+			Console.Out.WriteLine(code);
+			Console.Out.WriteLine();
 
-//			var unit = SyntaxFactory.ParseCompilationUnit(code);
-//			var tree = unit.SyntaxTree;
-//			var x = CSharpCompilation.Create("a",
-//				syntaxTrees: new[] { tree });
+			var unit = SyntaxFactory.ParseCompilationUnit(code);
+			var tree = unit.SyntaxTree;
+			var x = CSharpCompilation.Create("a",
+				syntaxTrees: new[] { tree });
 
-//			var modified = new MethodProfilerInjectionRewriter(x.GetSemanticModel(tree)).Visit(tree.GetRoot());
-//			Console.Out.WriteLine("After...");
-//			Console.Out.WriteLine(modified.GetText());
-//		}
+			var modified = new MethodProfilerInjectionRewriter(x.GetSemanticModel(tree)).Visit(tree.GetRoot());
+			Console.Out.WriteLine("After...");
+			Console.Out.WriteLine(modified.GetText());
+		}
 
 		private static async Task DoManualTimings()
 		{

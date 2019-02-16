@@ -27,7 +27,11 @@ namespace AutoMiniProfiler.Core
 					var expression = expressionBodied.ChildNodes().First() as ExpressionSyntax;
 					var statement = SyntaxFactory.ExpressionStatement(expression);
 					var newBlock = this.CreateBlock(node, new[] { statement });
-					return node.RemoveNode(expressionBodied, SyntaxRemoveOptions.KeepDirectives).WithBody(newBlock);
+					node = node.RemoveNode(expressionBodied, SyntaxRemoveOptions.KeepDirectives);
+					var semicolons = node.DescendantTokens(_ => true).Where(_ => _.Kind() == SyntaxKind.SemicolonToken);
+					return node.RemoveNode(expressionBodied, SyntaxRemoveOptions.KeepDirectives)
+						.ReplaceTokens(semicolons, (_, __) => new SyntaxToken())
+						.WithBody(newBlock);
 				}
 				else
 				{
