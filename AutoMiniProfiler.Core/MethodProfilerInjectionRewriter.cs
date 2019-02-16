@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,13 +13,14 @@ namespace AutoMiniProfiler.Core
 		private readonly SemanticModel model;
 
 		public MethodProfilerInjectionRewriter(SemanticModel model, bool visitIntoStructuredTrivia = false)
-			: base(visitIntoStructuredTrivia) => this.model = model;
+			: base(visitIntoStructuredTrivia) => this.model = model ?? throw new ArgumentNullException(nameof(model));
 
 		public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
 		{
 			if (!node.ContainsDiagnostics)
 			{
-				var expressionBodied = node.DescendantNodes().SingleOrDefault(_ => typeof(ArrowExpressionClauseSyntax).IsAssignableFrom(_.GetType()));
+				var expressionBodied = node.DescendantNodes().SingleOrDefault(
+					_ => typeof(ArrowExpressionClauseSyntax).IsAssignableFrom(_.GetType()));
 
 				if (expressionBodied != null)
 				{
@@ -44,38 +46,25 @@ namespace AutoMiniProfiler.Core
 			var methodModel = this.model.GetDeclaredSymbol(method) as IMethodSymbol;
 			var methodName = $"{methodModel.ContainingType.Name}.{methodModel.Name}";
 
+			var getTimingArgument = SyntaxFactory.LiteralExpression(
+				SyntaxKind.StringLiteralExpression,
+				SyntaxFactory.Literal(methodName));
+
+			var getTimingMemberAccess = SyntaxFactory.MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				SyntaxFactory.IdentifierName("TimingCreator"),
+				SyntaxFactory.IdentifierName("GetTiming"));
+
+			var getTimingInvocation = SyntaxFactory.InvocationExpression(getTimingMemberAccess)
+				.WithArgumentList(
+					SyntaxFactory.ArgumentList(
+						SyntaxFactory.SingletonSeparatedList(
+							SyntaxFactory.Argument(getTimingArgument))));
+
 			return SyntaxFactory.Block(
 				SyntaxFactory.SingletonList<StatementSyntax>(
-					SyntaxFactory.UsingStatement(
-						SyntaxFactory.Block(statements))
-					.WithExpression(
-						SyntaxFactory.InvocationExpression(
-							SyntaxFactory.MemberAccessExpression(
-								SyntaxKind.SimpleMemberAccessExpression,
-								SyntaxFactory.IdentifierName("TimingCreator"),
-								SyntaxFactory.IdentifierName("GetTiming")))
-						.WithArgumentList(
-							SyntaxFactory.ArgumentList(
-								SyntaxFactory.SingletonSeparatedList<ArgumentSyntax>(
-									SyntaxFactory.Argument(
-										SyntaxFactory.LiteralExpression(
-											SyntaxKind.StringLiteralExpression,
-												SyntaxFactory.Literal(methodName)))))))))
+					SyntaxFactory.UsingStatement(SyntaxFactory.Block(statements)).WithExpression(getTimingInvocation)))
 				.NormalizeWhitespace();
-		}
-	}
-
-	class C
-	{
-		int q;
-		void Foo() => System.Console.Out.WriteLine("Foo");
-
-		void Bar() => this.q = 10;
-
-		void FooWithBody()
-		{
-			var x = this.q;
-			System.Console.Out.WriteLine("Foo");
 		}
 	}
 }
