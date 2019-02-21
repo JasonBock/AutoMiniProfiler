@@ -29,8 +29,7 @@ namespace AutoMiniProfiler.Core
 					var newBlock = this.CreateBlock(node, new[] { statement });
 					node = node.RemoveNode(expressionBodied, SyntaxRemoveOptions.KeepDirectives);
 					var semicolons = node.DescendantTokens(_ => true).Where(_ => _.Kind() == SyntaxKind.SemicolonToken);
-					return node.RemoveNode(expressionBodied, SyntaxRemoveOptions.KeepDirectives)
-						.ReplaceTokens(semicolons, (_, __) => new SyntaxToken())
+					return node.ReplaceTokens(semicolons, (_, __) => new SyntaxToken())
 						.WithBody(newBlock);
 				}
 				else
